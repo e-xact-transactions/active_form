@@ -3,6 +3,7 @@
 This gem is for Rails 3.x.x only! 
 
 ## Model
+        require "active_form"
 
   	class ContactForm < ActiveForm
   	  attr_accessor :name, :institution, :email, :contact_number, :address, :purpose
