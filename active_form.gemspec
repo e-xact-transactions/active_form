@@ -1,5 +1,5 @@
 Gem::Specification.new do |s|
-  s.name        = 'active_form'
+  s.name        = 'rails3-active_form'
   s.version     = '2.0.0'
   s.platform    = Gem::Platform::RUBY
   s.summary     = 'Validations for Non Active Record Models.'
