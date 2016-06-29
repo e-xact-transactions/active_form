@@ -1,1 +1,1 @@
-require 'active_form'
+require 'new_active_form'
