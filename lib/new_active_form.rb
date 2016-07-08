@@ -38,6 +38,8 @@ class ActiveForm < ActiveRecord::Base
 
   # cattr_accessor :attr_types
 
+  attr_accessor :extra_attributes
+
   def self.field_accessor(name, sql_type = nil, default = nil, null = true)
     # (self.attr_types ||= {})[name.to_s] = sql_type
     self.send(:attribute, name, TYPE_MAPPINGS[sql_type], {default: default})
@@ -53,7 +55,11 @@ class ActiveForm < ActiveRecord::Base
   def initialize(new_attributes = nil, ignore_missing_attributes = false)
     if ignore_missing_attributes
       super(nil)
-      self.attributes = new_attributes.except( *extra_attribute_keys(new_attributes) )
+      # avoid mass-assignment
+      new_attributes.except( *extra_attribute_keys(new_attributes) ).each do |key,value|
+        self.send("#{key}=", value)
+      end
+      self.extra_attributes = new_attributes.slice( *extra_attribute_keys(new_attributes) )
     else
       super(new_attributes)
     end
@@ -61,7 +67,7 @@ class ActiveForm < ActiveRecord::Base
   end
 
   def extra_attribute_keys(new_attributes)
-    (new_attributes.keys.map(&:to_s) - attribute_names).map(&:to_sym)
+    @extra_attribute_keys ||= (new_attributes.keys.map(&:to_s) - attribute_names).map(&:to_sym)
   end
   private :extra_attribute_keys
 
