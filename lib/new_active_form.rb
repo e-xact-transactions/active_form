@@ -56,6 +56,7 @@ class ActiveForm < ActiveRecord::Base
     if ignore_missing_attributes
       super(nil)
       # avoid mass-assignment
+      new_attributes ||= {}
       new_attributes.except( *extra_attribute_keys(new_attributes) ).each do |key,value|
         self.send("#{key}=", value)
       end
@@ -111,9 +112,9 @@ class ActiveForm < ActiveRecord::Base
     
     alias create raise_not_implemented_error
     alias create! raise_not_implemented_error
-    alias validates_acceptance_of raise_not_implemented_error
-    alias validates_uniqueness_of raise_not_implemented_error
-    alias validates_associated raise_not_implemented_error
+    # alias validates_acceptance_of raise_not_implemented_error
+    # alias validates_uniqueness_of raise_not_implemented_error
+    # alias validates_associated raise_not_implemented_error
     alias validates_on_create raise_not_implemented_error
     alias validates_on_update raise_not_implemented_error
     alias save_with_validation raise_not_implemented_error
