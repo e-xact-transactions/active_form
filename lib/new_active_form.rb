@@ -41,8 +41,8 @@ class ActiveForm < ActiveRecord::Base
   attr_accessor :extra_attributes
 
   def self.field_accessor(name, sql_type = nil, default = nil, null = true)
-    # (self.attr_types ||= {})[name.to_s] = sql_type
     self.send(:attribute, name, TYPE_MAPPINGS[sql_type], {default: default})
+    self.send(:attr_accessible, name)
   end
 
   def to_model; self; end
@@ -52,7 +52,7 @@ class ActiveForm < ActiveRecord::Base
   def new_record?; true; end
   def id; nil; end
 
-  def initialize(new_attributes = nil, ignore_missing_attributes = false)
+  def initialize(new_attributes = {}, ignore_missing_attributes = false)
     if ignore_missing_attributes
       super(nil)
       # avoid mass-assignment
