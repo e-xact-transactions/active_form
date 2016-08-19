@@ -8,10 +8,6 @@ require_relative 'array_type'
 require_relative 'hash_type'
 
 class ActiveForm < ActiveRecord::Base
-  # include ActiveModel::Validations
-  # include ActiveModel::Validations::Callbacks
-  # include ActiveModel::Conversion
-  # extend  ActiveModel::Naming
 
   # All types currently specified as part of ActiveForms in RPM code:
   # :hash, :array, :datetime, :float, :decimal, :boolean, :date, :integer, :string
@@ -36,13 +32,11 @@ class ActiveForm < ActiveRecord::Base
       hash: HashType.new,
     }).with_indifferent_access unless defined?(TYPE_MAPPINGS)
 
-  # cattr_accessor :attr_types
-
   attr_accessor :extra_attributes
 
   def self.field_accessor(name, sql_type = nil, default = nil, null = true)
-    self.send(:attribute, name, TYPE_MAPPINGS[sql_type], {default: default})
-    self.send(:attr_accessible, name)
+    columns << ActiveRecord::ConnectionAdapters::Column.new(name.to_s, default, TYPE_MAPPINGS[sql_type], null)
+    self.send(:attr_accessible, name) if respond_to?(:attr_accessible)
   end
 
   def to_model; self; end
@@ -71,13 +65,6 @@ class ActiveForm < ActiveRecord::Base
     @extra_attribute_keys ||= (new_attributes.keys.map(&:to_s) - attribute_names).map(&:to_sym)
   end
   private :extra_attribute_keys
-
-  # # def attribute_names
-  # #   @attribute_names ||= instance_variables.map {|x| x.to_s[1..-1] }.sort
-  # # end
-  # def persistable_attribute_names
-  #   []
-  # end
 
   def self.columns
     @columns ||= add_user_provided_columns([])
@@ -112,9 +99,6 @@ class ActiveForm < ActiveRecord::Base
     
     alias create raise_not_implemented_error
     alias create! raise_not_implemented_error
-    # alias validates_acceptance_of raise_not_implemented_error
-    # alias validates_uniqueness_of raise_not_implemented_error
-    # alias validates_associated raise_not_implemented_error
     alias validates_on_create raise_not_implemented_error
     alias validates_on_update raise_not_implemented_error
     alias save_with_validation raise_not_implemented_error
