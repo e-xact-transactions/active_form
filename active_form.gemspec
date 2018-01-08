@@ -19,7 +19,7 @@ Gem::Specification.new do |s|
     "LICENCE",
     "Rakefile",
     "Gemfile",
-    "lib/new_active_form.rb",
+    "lib/active_form.rb",
     "active_form.gemspec",
     "test/test_helper.rb",
     "test/basic_test.rb"
@@ -30,8 +30,5 @@ Gem::Specification.new do |s|
     "test/basic_test.rb"
   ]
 
-  s.add_dependency('bundler', '>= 1.0')
-  s.add_dependency('activerecord', '>= 3.0.0')
-  s.add_dependency('activesupport', '>= 3.0.0')
-  s.add_development_dependency('rake', '>= 0.9')
+  s.add_dependency('activemodel', '>= 5')
 end

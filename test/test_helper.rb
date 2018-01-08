@@ -3,7 +3,7 @@ require 'test/unit'
 require 'active_record'
 
 plugin_root = File.expand_path(File.join(File.dirname(__FILE__), '..'))
-require File.join(plugin_root, 'lib/new_active_form')
+require File.join(plugin_root, 'lib/active_form')
 
 class Test::Unit::TestCase
   def assert_valid(model, message = nil)

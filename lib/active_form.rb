@@ -1,77 +1,42 @@
-require 'active_support/inflector'
-require 'active_support/core_ext/hash/except'
 require 'active_model'
 
+require_relative 'array_type'
+require_relative 'hash_type'
+
 class ActiveForm
-  include ActiveModel::Validations
-  include ActiveModel::Conversion
-  extend  ActiveModel::Naming
+  include ActiveModel::Model
 
-  def to_model; self; end
-  def persisted?; false; end
-  def to_key; nil; end
-  def to_param; nil; end
+  # All types currently specified as part of ActiveForms in RPM code:
+  # :hash, :array, :datetime, :float, :decimal, :boolean, :date, :integer, :string
+  ActiveModel::Type.register(:array, ArrayType)
+  ActiveModel::Type.register(:double, ActiveModel::Type::Float)
+  ActiveModel::Type.register(:hash, HashType)
 
-  def initialize(attributes = nil)
-    # Mass Assignment implementation
-    if attributes
-      attributes.each do |key, value|
-        self[key] = value
-      end
+  attr_accessor :extra_attributes
+
+  cattr_accessor :attr_types
+
+  def self.field_accessor(name, sql_type = nil, default = nil, null = true)
+    sql_type ||= :string
+    attr_types[name.to_s] = ActiveModel::Type.lookup(sql_type)
+    attr_accessor name
+  end
+
+  def self.attr_types
+    @attr_types ||= {}
+  end
+
+  def initialize(new_attributes = {}, ignore_missing_attributes = false)
+    super(new_attributes)
+  end
+
+  def _assign_attribute(k, v)
+    if respond_to?("#{k}=")
+      type = self.class.attr_types[k.to_s]
+      public_send("#{k}=", type.cast(v))
+    else
+      raise ActiveModel::UnknownAttributeError.new(self, k)
     end
-    yield self if block_given?
-  end
-  
-  def [](key)
-    instance_variable_get("@#{key}")
-  end
-  
-  def []=(key, value)
-    instance_variable_set("@#{key}", value)
-  end
-  
-  def method_missing(method_id, *params)
-    # Implement _before_type_cast accessors
-    if md = /_before_type_cast$/.match(method_id.to_s)
-      attr_name = md.pre_match
-      return self[attr_name] if self.respond_to?(attr_name)
-    end
-    super
   end
 
-  def new_record?
-    true
-  end
-
-  def id
-    nil
-  end
-
-  def raise_not_implemented_error(*params)
-    self.class.raise_not_implemented_error(params)
-  end
-  
-  alias save raise_not_implemented_error
-  alias save! raise_not_implemented_error
-  alias update_attribute raise_not_implemented_error
-  alias update_attributes raise_not_implemented_error
-  alias save valid?
-  alias save! raise_not_implemented_error
-  alias update_attribute raise_not_implemented_error
-  alias update_attributes raise_not_implemented_error
-  
-  class <<self
-    def raise_not_implemented_error(*params)
-      raise NotImplementedError
-    end
-    
-    alias create raise_not_implemented_error
-    alias create! raise_not_implemented_error
-    alias validates_acceptance_of raise_not_implemented_error
-    alias validates_uniqueness_of raise_not_implemented_error
-    alias validates_associated raise_not_implemented_error
-    alias validates_on_create raise_not_implemented_error
-    alias validates_on_update raise_not_implemented_error
-    alias save_with_validation raise_not_implemented_error
-  end
 end
