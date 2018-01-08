@@ -5,14 +5,13 @@ require_relative 'hash_type'
 
 class ActiveForm
   include ActiveModel::Model
+  include ActiveModel::Serializers::JSON
 
   # All types currently specified as part of ActiveForms in RPM code:
   # :hash, :array, :datetime, :float, :decimal, :boolean, :date, :integer, :string
   ActiveModel::Type.register(:array, ArrayType)
-  ActiveModel::Type.register(:double, ActiveModel::Type::Float)
   ActiveModel::Type.register(:hash, HashType)
-
-  attr_accessor :extra_attributes
+  ActiveModel::Type.register(:double, ActiveModel::Type::Float)
 
   cattr_accessor :attr_types
 
@@ -26,6 +25,7 @@ class ActiveForm
     @attr_types ||= {}
   end
 
+  # TODO: get rid of this "missing attributes" bit
   def initialize(new_attributes = {}, ignore_missing_attributes = false)
     super(new_attributes)
   end
@@ -39,4 +39,14 @@ class ActiveForm
     end
   end
 
+  # required to allow serialization
+  def attributes
+    self.class.attr_types.inject({}) do |a,(k,v)|
+      a[k.to_s] = nil
+      a
+    end
+  end
+  def attributes=(hash)
+    _assign_attributes(hash)
+  end
 end
