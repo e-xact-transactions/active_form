@@ -1,6 +1,6 @@
 require 'rubygems'
 require 'test/unit'
-require 'active_record'
+require 'byebug'
 
 plugin_root = File.expand_path(File.join(File.dirname(__FILE__), '..'))
 require File.join(plugin_root, 'lib/active_form')
