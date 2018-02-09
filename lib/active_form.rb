@@ -3,39 +3,44 @@ require 'active_model/type'
 
 require_relative 'array_type'
 require_relative 'hash_type'
+require_relative 'zoneless_date_time_type'
+require_relative 'zoneless_time_type'
 
 class ActiveForm
   include ActiveModel::Model
   include ActiveModel::Validations::Callbacks
   include ActiveModel::Serializers::JSON
+  # TODO: get rid of this - replace protected attributes with the Rails Way
+  include ActiveModel::MassAssignmentSecurity if defined?(ActiveModel::MassAssignmentSecurity)
 
   # All types currently specified as part of ActiveForms in RPM code:
   # :hash, :array, :datetime, :float, :decimal, :boolean, :date, :integer, :string
   ActiveModel::Type.register(:array, ArrayType)
   ActiveModel::Type.register(:hash, HashType)
+  ActiveModel::Type.register(:zoneless_datetime, ZonelessDateTimeType)
+  ActiveModel::Type.register(:zoneless_time, ZonelessTimeType)
   ActiveModel::Type.register(:double, ActiveModel::Type::Float)
 
-  cattr_accessor :attr_types
+  cattr_accessor :attr_types, :attr_names
 
   def self.field_accessor(name, sql_type = nil, default = nil, null = true)
     attr_types[name.to_s] = sql_type ? ActiveModel::Type.lookup(sql_type) : sql_type
-    attr_reader name
-    define_method "#{name}=" do |v|
-      raw_values[name.to_s] = v # so we can do before_type_cast
-      instance_variable_set("@#{name}", typecasted(name, v))
+    attr_names << name.to_s
+
+    attr_writer name
+    define_method name do
+      typecasted(name, instance_variable_get("@#{name}"))
     end
+    # TODO: get rid of this - replace protected attributes with the Rails Way
+    attr_accessible name if respond_to?(:attr_accessible)
   end
 
   def self.attr_types
     @attr_types ||= {}
   end
+  # FixedRecord require ordered names, so do this rather than relying on attr_types.keys
   def self.attr_names
-    attr_types.keys
-  end
-
-  # TODO: get rid of this "missing attributes" bit
-  def initialize(new_attributes = {}, ignore_missing_attributes = false)
-    super(new_attributes)
+    @attr_names ||= []
   end
 
   def attr_names
@@ -49,8 +54,8 @@ class ActiveForm
 
   # required to allow serialization
   def attributes
-    self.class.attr_types.inject({}) do |a,(k,v)|
-      a[k.to_s] = nil
+    self.class.attr_names.inject({}) do |a,k|
+      a[k.to_s] = self.send(k)
       a
     end
   end
@@ -62,17 +67,20 @@ class ActiveForm
   # Raw values are only recorded for attributes defined via 'field_accessor', so
   # jsut return the set value for other attrs.
   def method_missing(method_id, *params)
+    # Implement attr_name? methods
+    if md = /\?$/.match(method_id.to_s)
+      attr_name = md.pre_match
+      return self.send(attr_name) if self.class.attr_types[attr_name].class == ActiveModel::Type::Boolean
+    end
+    # Implement _before_type_cast accessors
     if md = /_before_type_cast$/.match(method_id.to_s)
       attr_name = md.pre_match
-      return raw_values[attr_name] || self.send(attr_name) if self.respond_to?(attr_name)
+      return instance_variable_get("@#{attr_name}") if self.respond_to?(attr_name)
     end
     super
   end
 
   private
-  def raw_values
-    @raw_values ||= {}
-  end
   def typecasted(attr_name, value)
     type = self.class.attr_types[attr_name.to_s]
     type.nil? ? value : type.cast(value)
