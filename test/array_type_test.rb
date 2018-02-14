@@ -7,16 +7,16 @@ class ArrayTypeTest < Test::Unit::TestCase
 
   def test_casts_array
     array_type = ArrayType.new
-    assert_equal [], array_type.type_cast([])
-    assert_equal [1,2,3], array_type.type_cast([1,2,3])
-    assert_equal %w(abc def ghi), array_type.type_cast(%w(abc def ghi))
+    assert_equal [], array_type.cast([])
+    assert_equal [1,2,3], array_type.cast([1,2,3])
+    assert_equal %w(abc def ghi), array_type.cast(%w(abc def ghi))
   end
 
   def test_casts_string
     array_type = ArrayType.new
-    assert_equal [], array_type.type_cast("")
-    assert_equal %w(1 2 3), array_type.type_cast("1,2,3")
-    assert_equal %w(abc def ghi), array_type.type_cast("abc,def,ghi")
+    assert_equal [], array_type.cast("")
+    assert_equal %w(1 2 3), array_type.cast("1,2,3")
+    assert_equal %w(abc def ghi), array_type.cast("abc,def,ghi")
   end
 
 end

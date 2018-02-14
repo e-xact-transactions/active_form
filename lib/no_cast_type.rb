@@ -1,6 +1,6 @@
 class NoCastType < ActiveRecord::Type::Value
 
-  def type_cast(value)
+  def cast_value(value)
     value
   end
 

@@ -58,7 +58,32 @@ class BasicTest < Test::Unit::TestCase
     ct = ContactTest.new(params)
     assert_valid ct
     assert_equal "Christoph", ct.name
+    assert ct.respond_to?(:name)
     refute ct.respond_to?(:subject)
+  end
+
+  def test_recognises_question_for_boolean_attrs
+    self.class.class_eval %q{
+      class PersonTest < ActiveForm
+        field_accessor :name
+        field_accessor :age, :integer
+        field_accessor :minor, :boolean
+      end
+    }
+
+    params = {
+      :name => "Christoph",
+      :age => 12,
+      :minor => true
+    }
+
+    pt = PersonTest.new(params)
+    assert pt.respond_to?(:name)
+    assert pt.respond_to?(:age)
+    assert pt.respond_to?(:minor)
+    refute pt.respond_to?(:name?)
+    refute pt.respond_to?(:age?)
+    assert pt.respond_to?(:minor?)
   end
 
   def test_mass_assignments_with_type_conversion

@@ -77,7 +77,26 @@ class ActiveForm
       attr_name = md.pre_match
       return instance_variable_get("@#{attr_name}") if self.respond_to?(attr_name)
     end
+
     super
+  end
+
+  def respond_to?(method_id, include_private_methods=false)
+    supported = super
+    return supported if supported
+
+    # Implement attr_name? methods
+    if md = /\?$/.match(method_id.to_s)
+      attr_name = md.pre_match
+      return self.class.attr_names.include?(attr_name) &&
+              self.class.attr_types[attr_name].class == ActiveModel::Type::Boolean
+    end
+    # Implement _before_type_cast accessors
+    if md = /_before_type_cast$/.match(method_id.to_s)
+      return self.class.attr_names.include?(md.pre_match)
+    end
+
+    false
   end
 
   private
