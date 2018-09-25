@@ -1,6 +1,6 @@
 require File.expand_path(File.join(File.dirname(__FILE__), 'test_helper'))
 
-class ValidationTest < Test::Unit::TestCase
+class ValidationTest < MiniTest::Test
 
   def test_error_messages
     assert_nothing_raised do
@@ -13,7 +13,7 @@ class ValidationTest < Test::Unit::TestCase
     end
 
     emt = ErrorMessagesTest.new
-    assert_invalid(emt)
+    refute emt.valid?
     assert_equal "is missing", emt.errors[:email][0]
     assert_equal "Email is missing", emt.errors.full_messages.first
   end
@@ -30,12 +30,12 @@ class ValidationTest < Test::Unit::TestCase
     end
 
     cot = ConfirmationOfTest.new
-    assert_valid cot
+    assert cot.valid?, cot.errors.full_messages.join(',')
     cot.email_confirmation = cot.email = "someone@example.com"
-    assert_valid cot
+    assert cot.valid?, cot.errors.full_messages.join(',')
     cot.email_confirmation = "wrong@address.com"
-    assert_invalid cot, "Should be invalid now!"
-    assert_not_nil cot.errors[:email]
+    refute cot.valid?
+    refute_nil cot.errors[:email]
   end
 
   def test_validates_acceptance_of
@@ -63,9 +63,9 @@ class ValidationTest < Test::Unit::TestCase
     end
 
     pot = PresenceOfTest.new
-    assert_invalid pot
+    refute pot.valid?
     pot.email = "someone@example.com"
-    assert_valid pot
+    assert pot.valid?, pot.errors.full_messages.join(',')
   end
 
   def test_validates_length_of
@@ -79,20 +79,9 @@ class ValidationTest < Test::Unit::TestCase
     end
 
     lot = LengthOfTest.new
-    assert_invalid lot
+    refute lot.valid?
     lot.name = "Christoph"
-    assert_valid lot
-  end
-
-  def test_validates_uniqueness_of
-    assert_raise(NoMethodError) do
-      self.class.class_eval %q{
-        class UniquenessTest < ActiveForm
-          field_accessor :email
-          validates_uniqueness_of :email
-        end
-      }
-    end
+    assert lot.valid?, lot.errors.full_messages.join(',')
   end
 
   def test_validates_format_of
@@ -106,11 +95,11 @@ class ValidationTest < Test::Unit::TestCase
     end
 
     fot = FormatOfTest.new
-    assert_invalid fot
+    refute fot.valid?
     fot.email = "abc"
-    assert_invalid fot
+    refute fot.valid?
     fot.email = "c.schiessl@gmx.net"
-    assert_valid fot
+    assert fot.valid?, fot.errors.full_messages.join(',')
   end
 
   def test_validates_inclusion_of
@@ -126,9 +115,9 @@ class ValidationTest < Test::Unit::TestCase
     end
 
     iot = InclusionOfTest.new
-    assert_invalid iot
+    refute iot.valid?
     iot.booltest, iot.texttest = true, "Jack"
-    assert_valid iot
+    assert iot.valid?, iot.errors.full_messages.join(',')
   end
 
   def test_validates_exclusion_of
@@ -142,15 +131,15 @@ class ValidationTest < Test::Unit::TestCase
     end
 
     eot = ExclusionOfTest.new
-    assert_valid eot
+    assert eot.valid?, eot.errors.full_messages.join(',')
     eot.name = "Bill"
-    assert_invalid eot
+    refute eot.valid?
     eot.name = "Christoph"
-    assert_valid eot
+    assert eot.valid?, eot.errors.full_messages.join(',')
   end
 
   def test_validates_associated
-    assert_raise(NoMethodError) do
+    assert_raises(NoMethodError) do
       self.class.class_eval %q{
         class AssociatedTest < ActiveForm
           field_accessor :test
@@ -166,22 +155,27 @@ class ValidationTest < Test::Unit::TestCase
         class NumericalityTest < ActiveForm
           field_accessor :width
           field_accessor :height
-          validates_numericality_of :width, :height
+          field_accessor :amount, :decimal
+          validates_numericality_of :width, :height, :amount
         end
       }
     end
 
     nt = NumericalityTest.new
-    assert_invalid nt
-    nt.width, nt.height = 123, "123"
-    assert_valid nt
+    refute nt.valid?
+    nt.width, nt.height, nt.amount = 123, "123", 1
+    assert nt.valid?, nt.errors.full_messages.join(',')
     nt.width = "123sdf"
-    assert_invalid nt
-    assert_not_nil nt.errors[:width]
+    refute nt.valid?
+    assert_equal "is not a number", nt.errors[:width].first
+    nt.width = 123
+    nt.amount = "$100"
+    refute nt.valid?
+    assert_equal "is not a number", nt.errors[:amount].first
   end
 
   def test_validates_on_create
-    assert_raise(NoMethodError) do
+    assert_raises(NoMethodError) do
       self.class.class_eval %q{
         class OnCreateTest < ActiveForm
           field_accessor :name
@@ -194,7 +188,7 @@ class ValidationTest < Test::Unit::TestCase
   end
 
   def test_validates_on_update
-    assert_raise(NoMethodError) do
+    assert_raises(NoMethodError) do
       self.class.class_eval %q{
         class OnUpdateTest < ActiveForm
           field_accessor :name

@@ -3,7 +3,7 @@ require File.expand_path(File.join(File.dirname(__FILE__), 'test_helper'))
 plugin_root = File.expand_path(File.join(File.dirname(__FILE__), '..'))
 require File.join(plugin_root, 'lib/array_type')
 
-class ArrayTypeTest < Test::Unit::TestCase
+class ArrayTypeTest < MiniTest::Test
 
   def test_casts_array
     array_type = ArrayType.new

@@ -3,7 +3,7 @@ require File.expand_path(File.join(File.dirname(__FILE__), 'test_helper'))
 plugin_root = File.expand_path(File.join(File.dirname(__FILE__), '..'))
 require File.join(plugin_root, 'lib/hash_type')
 
-class HashTypeTest < Test::Unit::TestCase
+class HashTypeTest < MiniTest::Test
 
   def test_casts_hash
     hash_type = HashType.new

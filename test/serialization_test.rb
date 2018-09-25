@@ -1,6 +1,6 @@
 require File.expand_path(File.join(File.dirname(__FILE__), 'test_helper'))
 
-class SerializationTest < Test::Unit::TestCase
+class SerializationTest < MiniTest::Test
 
   class ContactTest < ActiveForm
     field_accessor :name

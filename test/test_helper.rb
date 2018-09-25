@@ -1,16 +1,18 @@
 require 'rubygems'
-require 'test/unit'
+require 'minitest/autorun'
 require 'byebug'
 
 plugin_root = File.expand_path(File.join(File.dirname(__FILE__), '..'))
 require File.join(plugin_root, 'lib/active_form')
 
-class Test::Unit::TestCase
-  def assert_valid(model, message = nil)
-    assert model.valid?, message || "should be valid"
-  end
+class MiniTest::Test
 
-  def assert_invalid(model, message = nil)
-    assert !model.valid?, message || "should be invalid"
+  def assert_nothing_raised
+    begin
+      yield
+    rescue
+      flunk "Unexpected exception raised: #{$!.message}"
+    end
   end
+    
 end

@@ -1,6 +1,6 @@
 require File.expand_path(File.join(File.dirname(__FILE__), 'test_helper'))
 
-class BasicTest < Test::Unit::TestCase
+class BasicTest < MiniTest::Test
   include ActiveModel::Lint::Tests
 
   def model
@@ -39,7 +39,7 @@ class BasicTest < Test::Unit::TestCase
 
     assert_nothing_raised do
       ct = ContactTest.new(params)
-      assert_valid ct
+      assert ct.valid?, ct.errors.full_messages.join(',')
     end
   end
 
@@ -56,7 +56,7 @@ class BasicTest < Test::Unit::TestCase
     }
 
     ct = ContactTest.new(params)
-    assert_valid ct
+    assert ct.valid?, ct.errors.full_messages.join(',')
     assert_equal "Christoph", ct.name
     assert ct.respond_to?(:name)
     refute ct.respond_to?(:subject)
@@ -158,12 +158,18 @@ class BasicTest < Test::Unit::TestCase
     end
 
     sact = SaveAndCreateTest.new :name => "Christoph"
-    assert_raise(NoMethodError) { assert sact.save }
-    assert_raise(NoMethodError) { sact.save! }
-    assert_raise(NoMethodError) { sact.update_attribute :name, "Chris" }
-    assert_raise(NoMethodError) { sact.update_attributes :name => "Chris" }
-    assert_raise(NoMethodError) { SaveAndCreateTest.create :name => "Christoph" }
-    assert_raise(NoMethodError) { SaveAndCreateTest.create! :name => "Christoph" }
+    assert_raises(NoMethodError) { assert sact.save }
+    assert_raises(NoMethodError) { assert sact.save }
+    assert_raises(NoMethodError) { sact.save! }
+    assert_raises(NoMethodError) { sact.save! }
+    assert_raises(NoMethodError) { sact.update_attribute :name, "Chris" }
+    assert_raises(NoMethodError) { sact.update_attribute :name, "Chris" }
+    assert_raises(NoMethodError) { sact.update_attributes :name => "Chris" }
+    assert_raises(NoMethodError) { sact.update_attributes :name => "Chris" }
+    assert_raises(NoMethodError) { SaveAndCreateTest.create :name => "Christoph" }
+    assert_raises(NoMethodError) { SaveAndCreateTest.create :name => "Christoph" }
+    assert_raises(NoMethodError) { SaveAndCreateTest.create! :name => "Christoph" }
+    assert_raises(NoMethodError) { SaveAndCreateTest.create! :name => "Christoph" }
   end
 
   def test_attributes
@@ -175,9 +181,12 @@ class BasicTest < Test::Unit::TestCase
     end
 
     at = AttributesTest.new
-    assert_raise(NoMethodError) { at.not_defined = "test" }
-    assert_raise(NoMethodError) { at[:not_defined] = "test" }
-    assert_raise(NoMethodError) { at[:not_defined] }
+    assert_raises(NoMethodError) { at.not_defined = "test" }
+    assert_raises(NoMethodError) { at.not_defined = "test" }
+    assert_raises(NoMethodError) { at[:not_defined] = "test" }
+    assert_raises(NoMethodError) { at[:not_defined] = "test" }
+    assert_raises(NoMethodError) { at[:not_defined] }
+    assert_raises(NoMethodError) { at[:not_defined] }
   end
 
 end

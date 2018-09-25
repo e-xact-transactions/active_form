@@ -10,8 +10,6 @@ class ActiveForm
   include ActiveModel::Model
   include ActiveModel::Validations::Callbacks
   include ActiveModel::Serializers::JSON
-  # TODO: get rid of this - replace protected attributes with the Rails Way
-  include ActiveModel::MassAssignmentSecurity if defined?(ActiveModel::MassAssignmentSecurity)
 
   # All types currently specified as part of ActiveForms in RPM code:
   # :hash, :array, :datetime, :float, :decimal, :boolean, :date, :integer, :string
@@ -21,7 +19,7 @@ class ActiveForm
   ActiveModel::Type.register(:zoneless_time, ZonelessTimeType)
   ActiveModel::Type.register(:double, ActiveModel::Type::Float)
 
-  cattr_accessor :attr_types, :attr_names
+  # cattr_accessor :attr_types, :attr_names
 
   def self.field_accessor(name, sql_type = nil, default = nil, null = true)
     attr_types[name.to_s] = sql_type ? ActiveModel::Type.lookup(sql_type) : sql_type
@@ -31,8 +29,6 @@ class ActiveForm
     define_method name do
       typecasted(name, instance_variable_get("@#{name}"))
     end
-    # TODO: get rid of this - replace protected attributes with the Rails Way
-    attr_accessible name if respond_to?(:attr_accessible)
   end
 
   def self.attr_types
@@ -62,11 +58,21 @@ class ActiveForm
   def attributes=(hash)
     _assign_attributes(hash)
   end
+  
+  def read_attribute_before_type_cast(attr_name)
+    instance_variable_get("@#{attr_name}")
+  end
 
   # Implement _before_type_cast accessors
   # Raw values are only recorded for attributes defined via 'field_accessor', so
   # jsut return the set value for other attrs.
   def method_missing(method_id, *params)
+    # Implement _came_from_user? checks
+    # Rails 5.2 will use the typecast value unless the attr came from the user.
+    # Since this is for form validation, all attrs are deemed to have come from the user.
+    if md = /_came_from_user\?$/.match(method_id.to_s)
+      return true
+    end
     # Implement attr_name? methods
     if md = /\?$/.match(method_id.to_s)
       attr_name = md.pre_match
@@ -85,6 +91,10 @@ class ActiveForm
     supported = super
     return supported if supported
 
+    # Implement _came_from_user? checkas
+    if md = /_came_from_user\?$/.match(method_id.to_s)
+      return true
+    end
     # Implement attr_name? methods
     if md = /\?$/.match(method_id.to_s)
       attr_name = md.pre_match
